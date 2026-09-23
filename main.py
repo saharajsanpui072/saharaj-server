@@ -8,6 +8,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
+# Provider API Credentials
 PROVIDER_URL = "https://bantibhaiya.to/api/reseller_v1.php"
 MASTER_KEY = "a7f3e8b2c9d1f4a6b8c2d5e9f1a3b6c8"
 RESELLER_API_KEY = "f67105a05a812c45d3a5ffac39c58bd0"
@@ -27,10 +28,8 @@ def buy_key():
         # 1. Product ID
         product_id = str(req_data.get("product_id") or "133").strip()
         
-        # 2. Raw Duration / Provider name copied directly from original website
+        # 2. Raw Duration / Provider value
         raw_duration = str(req_data.get("duration") or "1 Hours").strip()
-        
-        # Remove any [Stock: XX] bracket text if copied by mistake
         cleaned_duration = re.sub(r'\[.*?\]', '', raw_duration).strip()
         
         # 3. Dynamic Option ID (Line 1 = 1, Line 2 = 2, etc.)
@@ -42,7 +41,6 @@ def buy_key():
             "Accept": "application/json"
         }
 
-        # Send exact parameters to provider endpoint
         payload = {
             "api_key": RESELLER_API_KEY,
             "action": "buy",
@@ -64,7 +62,6 @@ def buy_key():
         except Exception:
             res_json = {"raw_response": provider_res.text}
 
-        # Comprehensive key detection from provider JSON response
         key_found = None
         if isinstance(res_json, dict):
             key_found = (
@@ -90,7 +87,6 @@ def buy_key():
                 "product_id": product_id
             }), 200
 
-        # If provider returned an error message, extract and return it
         error_msg = "Provider issue: Unable to generate key"
         if isinstance(res_json, dict):
             error_msg = res_json.get("msg") or res_json.get("message") or res_json.get("error") or str(res_json)
